@@ -1,0 +1,28 @@
+pipeline {
+  agent any
+
+  environment {
+    TERRAFORM_DIR = 'terraform/'
+    AWS_REGION    = 'ap-south-1'
+  }
+
+  stages {
+    stage('Terraform Destroy') {
+      steps {
+        withAWS(credentials: 'aws_ecr_access_key', region: AWS_REGION) {
+          dir("${TERRAFORM_DIR}") {
+            sh """
+              terraform init -reconfigure
+              terraform destroy -auto-approve
+            """
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    success { echo "✅ Terraform destroy completed" }
+    failure { echo "❌ Terraform destroy failed" }
+  }
+}
